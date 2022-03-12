@@ -6,6 +6,7 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllersWithViews();
 builder.Services.AddRazorPages();
+builder.Services.AddSwaggerDocument();
 
 var app = builder.Build();
 
@@ -24,6 +25,8 @@ app.UseStaticFiles();
 
 app.UseRouting();
 
+app.UseOpenApi();
+app.UseSwaggerUi3();
 
 app.MapRazorPages();
 app.MapControllers();
