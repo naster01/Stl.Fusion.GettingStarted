@@ -1,6 +1,7 @@
 using System.Reflection;
 using BlazorWasm.Server.Services;
 using BlazorWasm.Shared;
+using Microsoft.AspNetCore.HttpOverrides;
 using Stl.Fusion;
 using Stl.Fusion.Bridge;
 using Stl.Fusion.Client;
@@ -30,7 +31,16 @@ builder.Services // Register Replica Service controllers
     .AddApplicationPart(Assembly.GetExecutingAssembly());
 builder.Services.AddServerSideBlazor();
 builder.Services.AddTransient<IUpdateDelayer>(c => new UpdateDelayer(c.UICommandTracker(), 0.1));
-
+builder.Services.AddCors(cors => cors.AddDefaultPolicy(
+    policy => policy
+        .WithOrigins("https://localhost:5218")
+        .WithFusionHeaders()
+));
+builder.Services.Configure<ForwardedHeadersOptions>(options => {
+    options.ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
+    options.KnownNetworks.Clear();
+    options.KnownProxies.Clear();
+});
 
 builder.Services.AddControllersWithViews();
 builder.Services.AddRazorPages();
@@ -57,6 +67,8 @@ app.UseBlazorFrameworkFiles();
 app.UseStaticFiles();
 
 app.UseRouting();
+
+app.UseCors();
 
 app.UseOpenApi();
 app.UseSwaggerUi3();
