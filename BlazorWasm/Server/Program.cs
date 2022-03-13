@@ -4,6 +4,7 @@ using BlazorWasm.Shared;
 using Stl.Fusion;
 using Stl.Fusion.Bridge;
 using Stl.Fusion.Client;
+using Stl.Fusion.Extensions;
 using Stl.Fusion.Server;
 using Stl.Fusion.UI;
 
@@ -12,20 +13,23 @@ var builder = WebApplication.CreateBuilder(args);
 // Fusion
 var fusion = builder.Services.AddFusion();
 var fusionServer = fusion.AddWebServer();
-//var fusionClient = fusion.AddRestEaseClient();
-//builder.Services.AddSingleton(new Publisher.Options() {Id = "p-d174ad6f-bd86-4bcc-84c5-5199c03a6ae8"});
+var fusionClient = fusion.AddRestEaseClient();
+
+builder.Services.AddSingleton(new Publisher.Options() {Id = "p-d174ad6f-bd86-4bcc-84c5-5199c03a6ae8"});
 
 // Fusion Services
+fusion.AddFusionTime();
+fusion.AddBackendStatus();
 fusion.AddComputeService<ICounterService, CounterService>();
 
 // Web
-// builder.Services.AddRouting();
-//
-// builder.Services // Register Replica Service controllers
-//     .AddMvc()
-//     .AddApplicationPart(Assembly.GetExecutingAssembly());
-// builder.Services.AddServerSideBlazor();
-// builder.Services.AddTransient<IUpdateDelayer>(c => new UpdateDelayer(c.UICommandTracker(), 0.1));
+builder.Services.AddRouting();
+
+builder.Services // Register Replica Service controllers
+    .AddMvc()
+    .AddApplicationPart(Assembly.GetExecutingAssembly());
+builder.Services.AddServerSideBlazor();
+builder.Services.AddTransient<IUpdateDelayer>(c => new UpdateDelayer(c.UICommandTracker(), 0.1));
 
 
 builder.Services.AddControllersWithViews();
@@ -60,7 +64,7 @@ app.UseSwaggerUi3();
 app.MapRazorPages();
 app.UseEndpoints(endpoints =>
 {
-    //endpoints.MapBlazorHub();
+    endpoints.MapBlazorHub();
     endpoints.MapFusionWebSocketServer();
     endpoints.MapControllers();
 });

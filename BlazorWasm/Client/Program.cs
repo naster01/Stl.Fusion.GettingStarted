@@ -7,6 +7,7 @@ using Stl.DependencyInjection;
 using Stl.Fusion;
 using Stl.Fusion.Blazor;
 using Stl.Fusion.Client;
+using Stl.Fusion.Extensions;
 using Stl.Fusion.UI;
 
 var builder = WebAssemblyHostBuilder.CreateDefault(args);
@@ -19,10 +20,14 @@ var apiBaseUri = new Uri($"{baseUri}api/");
 // Fusion services
 var fusion = builder.Services.AddFusion();
 fusion.AddBlazorUIServices();
+fusion.AddFusionTime();
+fusion.AddBackendStatus();
 var fusionClient = fusion.AddRestEaseClient(
     (c, o) =>
     {
         o.BaseUri = baseUri;
+        o.IsLoggingEnabled = true;
+        o.IsMessageLoggingEnabled = true;
     }).ConfigureHttpClientFactory(
     (c, name, o) => {
         // This code configures any HttpClient, so if you use a few of them
