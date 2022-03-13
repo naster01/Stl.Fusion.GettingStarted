@@ -10,18 +10,18 @@ var builder = WebApplication.CreateBuilder(args);
 // Fusion
 var fusion = builder.Services.AddFusion();
 var fusionServer = fusion.AddWebServer();
-builder.Services.AddSingleton(new Publisher.Options() {Id = "p-d174ad6f-bd86-4bcc-84c5-5199c03a6ae8"});
+//builder.Services.AddSingleton(new Publisher.Options() {Id = "p-d174ad6f-bd86-4bcc-84c5-5199c03a6ae8"});
 
 // Fusion Services
 fusion.AddComputeService<ICounterService, CounterService>();
 
 // Web
-builder.Services.AddRouting();
+//builder.Services.AddRouting();
 
-builder.Services // Register Replica Service controllers
-    .AddMvc() 
-    .AddApplicationPart(Assembly.GetExecutingAssembly());
-builder.Services.AddServerSideBlazor();
+// builder.Services // Register Replica Service controllers
+//     .AddMvc() 
+//     .AddApplicationPart(Assembly.GetExecutingAssembly());
+// builder.Services.AddServerSideBlazor();
 
 builder.Services.AddControllersWithViews();
 builder.Services.AddRazorPages();
@@ -55,7 +55,6 @@ app.MapRazorPages();
 app.UseEndpoints(endpoints => {
     endpoints.MapFusionWebSocketServer();
     endpoints.MapControllers();
-    //endpoints.MapFallbackToPage("/_Host"); // Typically needed for Blazor WASM
 });
 app.MapFallbackToFile("index.html");
 

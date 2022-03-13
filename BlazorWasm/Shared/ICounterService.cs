@@ -2,6 +2,7 @@
 
 public interface ICounterService
 {
-    Task<(int, DateTime)> Get();
+    Task<int> Get();
     Task Increment();
+    Task Reset();
 }

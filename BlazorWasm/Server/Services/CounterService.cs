@@ -7,14 +7,13 @@ public class CounterService : ICounterService
 {
     private readonly object _lock = new();
     private int _count;
-    private DateTime _changeTime = DateTime.Now;
-
-    [ComputeMethod(KeepAliveTime = 9999999)]
-    public virtual Task<(int, DateTime)> Get()
+    
+    [ComputeMethod]
+    public virtual Task<int> Get()
     {
         lock (_lock)
         {
-            return Task.FromResult((_count, _changeTime));
+            return Task.FromResult(_count);
         }
     }
 
@@ -23,7 +22,17 @@ public class CounterService : ICounterService
         lock (_lock)
         {
             ++_count;
-            _changeTime = DateTime.Now;
+        }
+        using (Computed.Invalidate())
+            Get();
+        return Task.CompletedTask;
+    }
+
+    public Task Reset()
+    {
+        lock (_lock)
+        {
+            _count = 0;
         }
         using (Computed.Invalidate())
             Get();

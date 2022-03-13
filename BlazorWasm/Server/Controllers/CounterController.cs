@@ -16,8 +16,11 @@ public class CounterController : ControllerBase, ICounterService
     }
 
     [HttpGet, Publish]
-    public Task<(int, DateTime)> Get() => _counterService.Get();
+    public Task<int> Get() => _counterService.Get();
 
     [HttpPost]
     public Task Increment() => _counterService.Increment();
+    
+    [HttpPost]
+    public Task Reset() => _counterService.Reset();
 }
