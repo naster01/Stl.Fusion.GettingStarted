@@ -1,9 +1,8 @@
 using BlazorWasm.Client;
-using BlazorWasm.Client.RestDefenitions;
+using BlazorWasm.Client.Services;
 using BlazorWasm.Shared;
 using Microsoft.AspNetCore.Components.Web;
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
-using Stl.DependencyInjection;
 using Stl.Fusion;
 using Stl.Fusion.Blazor;
 using Stl.Fusion.Client;
@@ -11,38 +10,37 @@ using Stl.Fusion.Extensions;
 using Stl.Fusion.UI;
 
 var builder = WebAssemblyHostBuilder.CreateDefault(args);
-builder.RootComponents.Add<App>("#app");
-builder.RootComponents.Add<HeadOutlet>("head::after");
-
+var services = builder.Services;
 var baseUri = new Uri(builder.HostEnvironment.BaseAddress);
 var apiBaseUri = new Uri($"{baseUri}api/");
 
 // Fusion services
-var fusion = builder.Services.AddFusion();
-fusion.AddBlazorUIServices();
-fusion.AddFusionTime();
-fusion.AddBackendStatus();
+var fusion = services.AddFusion();
 var fusionClient = fusion.AddRestEaseClient(
-    (c, o) =>
-    {
+    (c, o) => {
         o.BaseUri = baseUri;
         o.IsLoggingEnabled = true;
-        o.IsMessageLoggingEnabled = true;
+        o.IsMessageLoggingEnabled = false;
     }).ConfigureHttpClientFactory(
     (c, name, o) => {
-        // This code configures any HttpClient, so if you use a few of them
-        // you may add some extra logic to ensure their BaseAddress-es
-        // are properly set here
-        var isFusionClient = (name ?? "").Contains("FusionClient");
+        var isFusionClient = (name ?? "").StartsWith("Stl.Fusion");
         var clientBaseUri = isFusionClient ? baseUri : apiBaseUri;
         o.HttpClientActions.Add(client => client.BaseAddress = clientBaseUri);
     });
-fusionClient.AddReplicaService<ICounterService, ICounterServiceDef>();
-builder.Services.AddTransient<IUpdateDelayer>(c => new UpdateDelayer(c.UICommandTracker(), 0.1));
 
+// Fusion services
+fusion.AddFusionTime();
 
-var host = builder.Build();
-// Blazor host doesn't start IHostedService-s by default,
-// so let's start them "manually" here
-await host.Services.HostedServices().Start();
-await host.RunAsync();
+// Fusion services clients
+fusionClient.AddReplicaService<ICounterService, ICounterClientDef>();
+fusionClient.AddReplicaService<IWeatherForecastService, IWeatherForecastClientDef>();
+
+// Fusion Blazor UI services
+fusion.AddBlazorUIServices();
+
+builder.Services.AddTransient<IUpdateDelayer>(c => new UpdateDelayer(c.UICommandTracker(), 0.5));
+
+builder.RootComponents.Add<App>("#app");
+builder.RootComponents.Add<HeadOutlet>("head::after");
+
+await builder.Build().RunAsync();

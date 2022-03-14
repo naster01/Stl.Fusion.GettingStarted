@@ -1,8 +1,10 @@
-﻿namespace BlazorWasm.Shared;
+﻿using Stl.Fusion;
+
+namespace BlazorWasm.Shared;
 
 public interface ICounterService
 {
-    Task<int> Get();
-    Task Increment();
-    Task Reset();
+    [ComputeMethod]
+    Task<int> Get(CancellationToken cancellationToken = default);
+    Task Increment(CancellationToken cancellationToken = default);
 }

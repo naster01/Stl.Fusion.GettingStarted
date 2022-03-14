@@ -5,37 +5,17 @@ namespace BlazorWasm.Server.Services;
 
 public class CounterService : ICounterService
 {
-    private readonly object _lock = new();
-    private int _count;
-    
+    private volatile int _count;
+
     [ComputeMethod]
-    public virtual Task<int> Get()
-    {
-        lock (_lock)
-        {
-            return Task.FromResult(_count);
-        }
-    }
+    public virtual Task<int> Get(CancellationToken cancellationToken = default)
+        => Task.FromResult(_count);
 
-    public Task Increment()
+    public Task Increment(CancellationToken cancellationToken = default)
     {
-        lock (_lock)
-        {
-            ++_count;
-        }
+        Interlocked.Increment(ref _count);
         using (Computed.Invalidate())
-            Get();
-        return Task.CompletedTask;
-    }
-
-    public Task Reset()
-    {
-        lock (_lock)
-        {
-            _count = 0;
-        }
-        using (Computed.Invalidate())
-            Get();
+            Get(cancellationToken);
         return Task.CompletedTask;
     }
 }

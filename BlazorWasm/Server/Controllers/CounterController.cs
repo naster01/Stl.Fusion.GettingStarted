@@ -8,19 +8,15 @@ namespace BlazorWasm.Server.Controllers;
 [ApiController, JsonifyErrors]
 public class CounterController : ControllerBase, ICounterService
 {
-    private readonly ICounterService _counterService;
+    private readonly ICounterService _counter;
 
-    public CounterController(ICounterService counterService)
-    {
-        _counterService = counterService;
-    }
+    public CounterController(ICounterService counter) => _counter = counter;
 
     [HttpGet, Publish]
-    public Task<int> Get() => _counterService.Get();
+    public Task<int> Get(CancellationToken cancellationToken = default)
+        => _counter.Get(cancellationToken);
 
     [HttpPost]
-    public Task Increment() => _counterService.Increment();
-    
-    [HttpPost]
-    public Task Reset() => _counterService.Reset();
+    public Task Increment(CancellationToken cancellationToken = default)
+        => _counter.Increment(cancellationToken);
 }

@@ -1,66 +1,48 @@
-using System.Reflection;
 using BlazorWasm.Server.Services;
 using BlazorWasm.Shared;
-using Microsoft.AspNetCore.HttpOverrides;
 using Stl.Fusion;
-using Stl.Fusion.Bridge;
-using Stl.Fusion.Client;
-using Stl.Fusion.Extensions;
+using Stl.Fusion.Blazor;
 using Stl.Fusion.Server;
-using Stl.Fusion.UI;
 
 var builder = WebApplication.CreateBuilder(args);
+var services = builder.Services;
 
 // Fusion
 var fusion = builder.Services.AddFusion();
 var fusionServer = fusion.AddWebServer();
-var fusionClient = fusion.AddRestEaseClient();
-
-builder.Services.AddSingleton(new Publisher.Options() {Id = "p-d174ad6f-bd86-4bcc-84c5-5199c03a6ae8"});
 
 // Fusion Services
-fusion.AddFusionTime();
-fusion.AddBackendStatus();
+fusion.AddBlazorUIServices();
 fusion.AddComputeService<ICounterService, CounterService>();
+fusion.AddComputeService<IWeatherForecastService, WeatherForecastService>();
 
-// Web
-builder.Services.AddRouting();
+services.AddControllersWithViews();
+services.AddRazorPages();
 
-builder.Services // Register Replica Service controllers
-    .AddMvc()
-    .AddApplicationPart(Assembly.GetExecutingAssembly());
-builder.Services.AddServerSideBlazor();
-builder.Services.AddTransient<IUpdateDelayer>(c => new UpdateDelayer(c.UICommandTracker(), 0.1));
-builder.Services.AddCors(cors => cors.AddDefaultPolicy(
-    policy => policy
-        .WithOrigins("https://localhost:5218")
-        .WithFusionHeaders()
-));
-builder.Services.Configure<ForwardedHeadersOptions>(options => {
-    options.ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
-    options.KnownNetworks.Clear();
-    options.KnownProxies.Clear();
-});
-
-builder.Services.AddControllersWithViews();
-builder.Services.AddRazorPages();
-builder.Services.AddSwaggerDocument();
+services.AddEndpointsApiExplorer();
+services.AddSwaggerDocument();
 
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
+    app.UseDeveloperExceptionPage();
     app.UseWebAssemblyDebugging();
+    app.UseOpenApi();
+    app.UseSwaggerUi3();
 }
 else
 {
     app.UseExceptionHandler("/Error");
+    // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
+    app.UseHsts();
 }
 
+app.UseHttpsRedirection();
 app.UseWebSockets(new WebSocketOptions()
 {
-    KeepAliveInterval = TimeSpan.FromSeconds(30), // You can change this
+    KeepAliveInterval = TimeSpan.FromSeconds(30),
 });
 
 app.UseBlazorFrameworkFiles();
@@ -68,18 +50,9 @@ app.UseStaticFiles();
 
 app.UseRouting();
 
-app.UseCors();
-
-app.UseOpenApi();
-app.UseSwaggerUi3();
-
+app.MapFusionWebSocketServer();
 app.MapRazorPages();
-app.UseEndpoints(endpoints =>
-{
-    endpoints.MapBlazorHub();
-    endpoints.MapFusionWebSocketServer();
-    endpoints.MapControllers();
-});
+app.MapControllers();
 app.MapFallbackToFile("index.html");
 
 app.Run();
